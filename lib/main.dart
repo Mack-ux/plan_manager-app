@@ -81,7 +81,7 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
                     });
                   }
                 },
-                child: Text('Select Date'),
+                child: Text('Select  Date'),
               ),
             ],
           ),
