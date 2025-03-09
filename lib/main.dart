@@ -91,7 +91,7 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
       context: context,
       builder: (context) {
         TextEditingController nameController = TextEditingController(text: plan.name);
-        return AlertDialog(
+        return  AlertDialog(
           title: Text('Edit Plan'),
           content: TextField(controller: nameController, decoration: InputDecoration(labelText: 'New Name')),
           actions: [
