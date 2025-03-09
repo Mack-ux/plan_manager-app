@@ -113,7 +113,7 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Plan Manager')),
+      appBar: AppBar(title: Text('Plan Manager (List)')),
       body: ListView.builder(
         itemCount: plans.length,
         itemBuilder: (context, index) {
