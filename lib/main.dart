@@ -133,7 +133,7 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Adoption & Travel Planner')),
+      appBar: AppBar(title: Text('Adoption & Travel Planner List')),
       body: Column(
         children: [
           Expanded(
