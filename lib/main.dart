@@ -1,0 +1,221 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:intl/intl.dart';
+import 'package:syncfusion_flutter_calendar/calendar.dart';
+import 'package:flutter_draggable_gridview/flutter_draggable_gridview.dart';
+
+void main() {
+  runApp(PlanManagerApp());
+}
+
+class PlanManagerApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Adoption & Travel Planner',
+      home: PlanManagerScreen(),
+    );
+  }
+}
+
+class Plan {
+  String name;
+  String description;
+  DateTime date;
+  bool completed;
+  String category;
+
+  Plan({required this.name, required this.description, required this.date, this.completed = false, required this.category});
+}
+
+class PlanManagerScreen extends StatefulWidget {
+  @override
+  _PlanManagerScreenState createState() => _PlanManagerScreenState();
+}
+
+class _PlanManagerScreenState extends State<PlanManagerScreen> {
+  List<Plan> plans = [];
+  List<Plan> draggablePlans = [];
+
+  void _createPlan() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        TextEditingController nameController = TextEditingController();
+        TextEditingController descriptionController = TextEditingController();
+        DateTime selectedDate = DateTime.now();
+        String selectedCategory = 'Adoption';
+
+        return AlertDialog(
+          title: Text('Create Plan'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: nameController, decoration: InputDecoration(labelText: 'Name')),
+              TextField(controller: descriptionController, decoration: InputDecoration(labelText: 'Description')),
+              DropdownButton<String>(
+                value: selectedCategory,
+                items: ['Adoption', 'Travel'].map((String category) {
+                  return DropdownMenuItem<String>(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedCategory = value!;
+                  });
+                },
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  DateTime? pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2100),
+                  );
+                  if (pickedDate != null) {
+                    setState(() {
+                      selectedDate = pickedDate;
+                    });
+                  }
+                },
+                child: Text('Select Date'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  draggablePlans.add(Plan(
+                    name: nameController.text,
+                    description: descriptionController.text,
+                    date: selectedDate,
+                    category: selectedCategory,
+                  ));
+                });
+                Navigator.pop(context);
+              },
+              child: Text('Add to Drag List'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _editPlan(Plan plan) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        TextEditingController nameController = TextEditingController(text: plan.name);
+        return AlertDialog(
+          title: Text('Edit Plan'),
+          content: TextField(controller: nameController, decoration: InputDecoration(labelText: 'New Name')),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  plan.name = nameController.text;
+                });
+                Navigator.pop(context);
+              },
+              child: Text('Update'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Adoption & Travel Planner')),
+      body: Column(
+        children: [
+          Expanded(
+            child: SfCalendar(
+              view: CalendarView.month,
+              onTap: (calendarTapDetails) {
+                if (calendarTapDetails.date != null && calendarTapDetails.appointments == null) {
+                  setState(() {
+                    plans.addAll(draggablePlans);
+                    draggablePlans.clear();
+                  });
+                }
+              },
+              dataSource: PlanDataSource(plans),
+            ),
+          ),
+          Expanded(
+            child: DragTarget<Plan>(
+              onAccept: (plan) {
+                setState(() {
+                  plans.add(plan);
+                  draggablePlans.remove(plan);
+                });
+              },
+              builder: (context, candidateData, rejectedData) {
+                return ListView.builder(
+                  itemCount: plans.length,
+                  itemBuilder: (context, index) {
+                    final plan = plans[index];
+                    return GestureDetector(
+                      onLongPress: () => _editPlan(plan),
+                      onDoubleTap: () {
+                        setState(() {
+                          plans.removeAt(index);
+                        });
+                      },
+                      child: Slidable(
+                        key: ValueKey(plan.name),
+                        startActionPane: ActionPane(
+                         motion: DrawerMotion(),
+                      children: [
+                           SlidableAction(
+                           label: plan.completed ? 'Undo' : 'Complete',
+                          backgroundColor: plan.completed ? Colors.orange : Colors.green,
+                          icon: Icons.check,
+                          onPressed: (context) {
+                           setState(() {
+                           plan.completed = !plan.completed;
+                             });
+                         },
+                    ),
+                ],
+               ),
+
+                        child: ListTile(
+                          title: Text(plan.name, style: TextStyle(decoration: plan.completed ? TextDecoration.lineThrough : null)),
+                          subtitle: Text('${plan.category} - ${DateFormat.yMMMd().format(plan.date)}'),
+                          tileColor: plan.completed ? Colors.green[100] : Colors.grey[200],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _createPlan,
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class PlanDataSource extends CalendarDataSource {
+  PlanDataSource(List<Plan> source) {
+    appointments = source;
+  }
+}
+
+
+
+
